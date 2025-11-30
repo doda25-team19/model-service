@@ -1,0 +1,45 @@
+name: Train and Release Model
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_version:
+        description: 'Model version (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  train-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Train model
+        run: |
+          python train.py
+      
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v${{ inputs.model_version }} \
+            --title "Model v${{ inputs.model_version }}" \
+            --notes "Trained SMS spam classifier model version ${{ inputs.model_version }}"
+      
+      - name: Upload all model files to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v${{ inputs.model_version }} output/*.joblib

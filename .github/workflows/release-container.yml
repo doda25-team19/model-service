@@ -47,4 +47,6 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}.${{ env.MINOR }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

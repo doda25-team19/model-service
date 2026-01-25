@@ -2,8 +2,8 @@ name: Release container image
 
 on:
   push:
-    tags:
-      - "v*" 
+    paths:
+      - "version.txt"
 
 permissions:
   contents: read
@@ -18,15 +18,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clone repository (no external actions)
-        run: |
-          git clone "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Extract version from tag
         id: vars
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          VERSION=$(cat version.txt)
+          MAJOR=$(echo "$VERSION" | cut -d . -f 1)
+          MINOR=$(echo "$VERSION" | cut -d . -f 2)
+          PATCH=$(echo "$VERSION" | cut -d . -f 3)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "VERSION_MINOR=$MINOR" >> $GITHUB_ENV
+          echo "VERSION_PATCH=$PATCH" >> $GITHUB_ENV
 
       - name: Log in to GHCR
         run: |
@@ -34,15 +39,12 @@ jobs:
             | docker login "${{ env.REGISTRY }}" \
               -u "${{ github.actor }}" --password-stdin
 
-      - name: Build and push image
-        run: |
-          VERSION="${{ steps.vars.outputs.VERSION }}"
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-
-          echo "Building $IMAGE:$VERSION"
-
-          docker build . -t "$IMAGE:$VERSION"
-          docker tag "$IMAGE:$VERSION" "$IMAGE:latest"
-
-          docker push "$IMAGE:$VERSION"
-          docker push "$IMAGE:latest"
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

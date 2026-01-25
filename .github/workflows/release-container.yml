@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*" 
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -49,3 +50,4 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.VERSION }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+

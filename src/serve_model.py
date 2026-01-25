@@ -38,9 +38,12 @@ def predict():
     input_data = request.get_json()
     sms = input_data.get('sms')
     processed_sms = prepare(sms)
-    model = joblib.load('output/model.joblib')
+
+    model_path = os.environ.get('MODEL_FILE', 'output/model.joblib')
+    model = joblib.load(model_path)
+
     prediction = model.predict(processed_sms)[0]
-    
+
     res = {
         "result": prediction,
         "classifier": "decision tree",

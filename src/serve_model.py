@@ -56,14 +56,13 @@ def predict():
 if __name__ == '__main__':
     model_path = os.environ.get('MODEL_FILE', 'output/model.joblib')
     model_url = os.environ.get('MODEL_URL', '')
-    model_name = os.environ.get('MODEL_FILE_NAME', 'model.joblib')
     
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     
     if not os.path.isfile(model_path):
         if model_url:
             print(f"Model file not found at {model_path}, downloading from {model_url}...")
-            urllib.request.urlretrieve(model_url, model_name)
+            urllib.request.urlretrieve(model_url, model_path)  # Changed: download to model_path, not model_name
             print(f"Model downloaded to {model_path}")
         else:
             print(f"ERROR: Model file not found at {model_path} and no MODEL_URL provided!")

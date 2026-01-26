@@ -55,20 +55,35 @@ def predict():
 
 if __name__ == '__main__':
     model_path = os.environ.get('MODEL_FILE', 'output/model.joblib')
+    preprocessor_path = 'output/preprocessor.joblib'
     model_url = os.environ.get('MODEL_URL', '')
+    preprocessor_url = os.environ.get('PREPROCESSOR_URL', '')
     
-    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    os.makedirs('output', exist_ok=True)
     
+    # Download model if missing
     if not os.path.isfile(model_path):
         if model_url:
             print(f"Model file not found at {model_path}, downloading from {model_url}...")
-            urllib.request.urlretrieve(model_url, model_path)  # Changed: download to model_path, not model_name
+            urllib.request.urlretrieve(model_url, model_path)
             print(f"Model downloaded to {model_path}")
         else:
             print(f"ERROR: Model file not found at {model_path} and no MODEL_URL provided!")
             exit(1)
     else:
         print(f"Model file found at {model_path}")
+    
+    # Download preprocessor if missing
+    if not os.path.isfile(preprocessor_path):
+        if preprocessor_url:
+            print(f"Preprocessor file not found at {preprocessor_path}, downloading from {preprocessor_url}...")
+            urllib.request.urlretrieve(preprocessor_url, preprocessor_path)
+            print(f"Preprocessor downloaded to {preprocessor_path}")
+        else:
+            print(f"ERROR: Preprocessor file not found at {preprocessor_path} and no PREPROCESSOR_URL provided!")
+            exit(1)
+    else:
+        print(f"Preprocessor file found at {preprocessor_path}")
     
     port = int(os.getenv("MODEL_PORT", 8081))
     app.run(host="0.0.0.0", port=port, debug=True)

@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 from flasgger import Swagger
 import pandas as pd
 import os
+import urllib.request
 
 from text_preprocessing import prepare, _extract_message_len, _text_process
 
@@ -53,6 +54,22 @@ def predict():
     return jsonify(res)
 
 if __name__ == '__main__':
-    #clf = joblib.load('output/model.joblib')
+    model_path = os.environ.get('MODEL_FILE', 'output/model.joblib')
+    model_url = os.environ.get('MODEL_URL', '')
+    model_name = os.environ.get('MODEL_FILE_NAME', 'model.joblib')
+    
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    
+    if not os.path.isfile(model_path):
+        if model_url:
+            print(f"Model file not found at {model_path}, downloading from {model_url}...")
+            urllib.request.urlretrieve(model_url, model_name)
+            print(f"Model downloaded to {model_path}")
+        else:
+            print(f"ERROR: Model file not found at {model_path} and no MODEL_URL provided!")
+            exit(1)
+    else:
+        print(f"Model file found at {model_path}")
+    
     port = int(os.getenv("MODEL_PORT", 8081))
     app.run(host="0.0.0.0", port=port, debug=True)

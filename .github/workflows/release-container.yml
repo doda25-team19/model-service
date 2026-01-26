@@ -2,8 +2,8 @@ name: Release container image
 
 on:
   push:
-    tags:
-      - "v*" 
+    paths:
+      - "version.txt"
   workflow_dispatch:
 
 permissions:
@@ -19,15 +19,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clone repository (no external actions)
-        run: |
-          git clone "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Extract version from tag
+      - name: Extract version from version file
         id: vars
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          VERSION=$(cat version.txt | xargs)
+          MAJOR=$(echo "$VERSION" | cut -d . -f 1)
+          MINOR=$(echo "$VERSION" | cut -d . -f 2)
+          PATCH=$(echo "$VERSION" | cut -d . -f 3)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+          echo "PATCH=$PATCH" >> $GITHUB_ENV
 
       - name: Log in to GHCR
         run: |
@@ -35,7 +40,7 @@ jobs:
             | docker login "${{ env.REGISTRY }}" \
               -u "${{ github.actor }}" --password-stdin
 
-      - name: Set up QEMU
+      - name: Set up QEMUd
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -45,9 +50,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}.${{ env.MINOR }}.latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ env.MAJOR }}.latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-

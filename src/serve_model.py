@@ -54,7 +54,7 @@ def predict():
     return jsonify(res)
 
 if __name__ == '__main__':
-    model_path = os.environ.get('MODEL_FILE', 'output/model.joblib')
+    model_path = 'output/model.joblib'
     preprocessor_path = 'output/preprocessor.joblib'
     model_url = os.environ.get('MODEL_URL', '')
     preprocessor_url = os.environ.get('PREPROCESSOR_URL', '')
@@ -74,7 +74,9 @@ if __name__ == '__main__':
         print(f"Model file found at {model_path}")
     
     # Download preprocessor if missing
+    print("checking for preprocessor.joblib")
     if not os.path.isfile(preprocessor_path):
+        print("no preprocessor file.")
         if preprocessor_url:
             print(f"Preprocessor file not found at {preprocessor_path}, downloading from {preprocessor_url}...")
             urllib.request.urlretrieve(preprocessor_url, preprocessor_path)
